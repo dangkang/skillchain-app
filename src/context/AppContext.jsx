@@ -1,23 +1,35 @@
-import { createContext, useState, useContext } from 'react'
+import { createContext, useState, useContext, useCallback } from 'react';
 
-const AppContext = createContext()
+const AppContext = createContext();
 
 export const useApp = () => {
-  const context = useContext(AppContext)
+  const context = useContext(AppContext);
   if (!context) {
-    throw new Error('useApp must be used within AppProvider')
+    throw new Error('useApp must be used within AppProvider');
   }
-  return context
-}
+  return context;
+};
 
 export const AppProvider = ({ children }) => {
-  const [currentView, setCurrentView] = useState('dashboard')
+  const [wallet, setWallet] = useState(null);
+  const [sklBalance, setSklBalance] = useState(0);
+  
   const [userProfile, setUserProfile] = useState({
     name: '山田太郎',
     did: 'did:ethr:0x1234...5678',
-    sklBalance: 350,
     memberSince: '2024年1月'
-  })
+  });
+
+  const connectWallet = useCallback(() => {
+    const dummyWallet = "0xAbCdEf12345678901234567890aBcDeF12345678";
+    setWallet(dummyWallet);
+    setSklBalance(350); // Set initial balance from dummy data
+  }, []);
+
+  const disconnectWallet = useCallback(() => {
+    setWallet(null);
+    setSklBalance(0);
+  }, []);
 
   // NFT証明書データ
   const [nftCertificates, setNftCertificates] = useState([
@@ -59,7 +71,7 @@ export const AppProvider = ({ children }) => {
       tokenId: 'NFT-GCP-2024-127',
       image: 'https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=400'
     }
-  ])
+  ]);
 
   // スキルトークン履歴
   const [sklHistory, setSklHistory] = useState([
@@ -69,7 +81,7 @@ export const AppProvider = ({ children }) => {
     { id: 4, date: '2024-10-15', type: 'earned', amount: 80, description: 'ピアレビュー実施', from: 'Community' },
     { id: 5, date: '2024-09-20', type: 'earned', amount: 120, description: 'プロジェクト完遂', from: 'Client Project Alpha' },
     { id: 6, date: '2024-09-10', type: 'spent', amount: -20, description: 'NFT発行手数料', to: 'Platform' }
-  ])
+  ]);
 
   // DAO投票データ
   const [daoProposals, setDaoProposals] = useState([
@@ -107,7 +119,7 @@ export const AppProvider = ({ children }) => {
       result: 'approved',
       requiredSKL: 50
     }
-  ])
+  ]);
 
   // ピアレビューデータ
   const [peerReviews, setPeerReviews] = useState({
@@ -148,11 +160,13 @@ export const AppProvider = ({ children }) => {
         sklEarned: 100
       }
     ]
-  })
+  });
 
   const value = {
-    currentView,
-    setCurrentView,
+    wallet,
+    sklBalance,
+    connectWallet,
+    disconnectWallet,
     userProfile,
     setUserProfile,
     nftCertificates,
@@ -163,7 +177,7 @@ export const AppProvider = ({ children }) => {
     setDaoProposals,
     peerReviews,
     setPeerReviews
-  }
+  };
 
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>
-}
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+};
