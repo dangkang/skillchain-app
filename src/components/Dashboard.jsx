@@ -1,159 +1,128 @@
-import { useApp } from '../context/AppContext'
+import React from 'react';
+import { useApp } from '../context/AppContext';
+import { Link as RouterLink } from 'react-router-dom';
+import { Grid, Card, CardContent, Typography, Button, Box, Paper, List, ListItem, ListItemText, ListItemAvatar, Avatar, Divider } from '@mui/material';
+import { School, Stars, HowToVote, Group, ArrowForward, TrendingUp, TrendingDown } from '@mui/icons-material';
 
-function Dashboard() {
-  const { userProfile, nftCertificates, sklHistory, daoProposals, peerReviews, setCurrentView } = useApp()
-
-  const recentNFTs = nftCertificates.slice(0, 3)
-  const recentSKL = sklHistory.slice(0, 3)
-  const activeProposals = daoProposals.filter(p => p.status === 'active')
-  const pendingReviews = peerReviews.pending
-
+function StatCard({ title, value, icon, to }) {
   return (
-    <div className="dashboard">
-      <h1 className="page-title">ダッシュボード</h1>
-
-      {/* ステータスカード */}
-      <div className="status-cards">
-        <div className="status-card">
-          <div className="card-icon">🎖️</div>
-          <div className="card-content">
-            <div className="card-value">{nftCertificates.length}</div>
-            <div className="card-label">NFT証明書</div>
-          </div>
-        </div>
-
-        <div className="status-card">
-          <div className="card-icon">💎</div>
-          <div className="card-content">
-            <div className="card-value">{userProfile.sklBalance}</div>
-            <div className="card-label">SKLトークン</div>
-          </div>
-        </div>
-
-        <div className="status-card">
-          <div className="card-icon">🗳️</div>
-          <div className="card-content">
-            <div className="card-value">{activeProposals.length}</div>
-            <div className="card-label">進行中の投票</div>
-          </div>
-        </div>
-
-        <div className="status-card">
-          <div className="card-icon">👥</div>
-          <div className="card-content">
-            <div className="card-value">{pendingReviews.length}</div>
-            <div className="card-label">レビュー待ち</div>
-          </div>
-        </div>
-      </div>
-
-      {/* 最近のNFT */}
-      <section className="dashboard-section">
-        <div className="section-header">
-          <h2 className="section-title">最近のNFT証明書</h2>
-          <button className="view-all-button" onClick={() => setCurrentView('nft')}>
-            すべて表示 →
-          </button>
-        </div>
-        <div className="nft-grid">
-          {recentNFTs.map(nft => (
-            <div key={nft.id} className="nft-card-mini">
-              <img src={nft.image} alt={nft.title} className="nft-card-image" />
-              <div className="nft-card-info">
-                <h3 className="nft-card-title">{nft.title}</h3>
-                <p className="nft-card-date">{nft.issueDate}</p>
-                {nft.sklEarned && (
-                  <span className="skl-badge">+{nft.sklEarned} SKL</span>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* 最近のSKL履歴 */}
-      <section className="dashboard-section">
-        <div className="section-header">
-          <h2 className="section-title">最近のSKL履歴</h2>
-          <button className="view-all-button" onClick={() => setCurrentView('skl')}>
-            すべて表示 →
-          </button>
-        </div>
-        <div className="skl-list">
-          {recentSKL.map(item => (
-            <div key={item.id} className="skl-item">
-              <div className="skl-item-left">
-                <div className={`skl-icon ${item.type}`}>
-                  {item.type === 'earned' ? '📈' : '📉'}
-                </div>
-                <div className="skl-item-info">
-                  <p className="skl-item-desc">{item.description}</p>
-                  <p className="skl-item-from">
-                    {item.from ? `from: ${item.from}` : `to: ${item.to}`}
-                  </p>
-                </div>
-              </div>
-              <div className={`skl-amount ${item.type}`}>
-                {item.amount > 0 ? '+' : ''}{item.amount} SKL
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* アクティブな投票 */}
-      {activeProposals.length > 0 && (
-        <section className="dashboard-section">
-          <div className="section-header">
-            <h2 className="section-title">投票が必要です</h2>
-            <button className="view-all-button" onClick={() => setCurrentView('dao')}>
-              投票ページへ →
-            </button>
-          </div>
-          <div className="proposals-list">
-            {activeProposals.slice(0, 2).map(proposal => (
-              <div key={proposal.id} className="proposal-card-mini">
-                <h3 className="proposal-title">{proposal.title}</h3>
-                <p className="proposal-description">{proposal.description}</p>
-                <div className="proposal-meta">
-                  <span className="proposal-deadline">期限: {proposal.endDate}</span>
-                  <span className={`vote-status ${proposal.userVoted ? 'voted' : 'pending'}`}>
-                    {proposal.userVoted ? '✓ 投票済み' : '未投票'}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* ペンディングレビュー */}
-      {pendingReviews.length > 0 && (
-        <section className="dashboard-section">
-          <div className="section-header">
-            <h2 className="section-title">レビュー依頼</h2>
-            <button className="view-all-button" onClick={() => setCurrentView('review')}>
-              レビューページへ →
-            </button>
-          </div>
-          <div className="reviews-list">
-            {pendingReviews.map(review => (
-              <div key={review.id} className="review-card-mini">
-                <div className="review-info">
-                  <h3 className="review-project">{review.project}</h3>
-                  <p className="review-reviewee">レビュー対象: {review.reviewee}</p>
-                </div>
-                <div className="review-meta">
-                  <span className="review-deadline">期限: {review.deadline}</span>
-                  <span className="review-reward">報酬: {review.sklReward} SKL</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-    </div>
-  )
+    <Grid item xs={12} sm={6} md={3}>
+      <Paper component={RouterLink} to={to} sx={{ p: 2, display: 'flex', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}>
+        <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>{icon}</Avatar>
+        <Box>
+          <Typography variant="h6">{value}</Typography>
+          <Typography variant="body2" color="text.secondary">{title}</Typography>
+        </Box>
+      </Paper>
+    </Grid>
+  );
 }
 
-export default Dashboard
+function Dashboard() {
+  const { wallet, userProfile, sklBalance, nftCertificates, sklHistory, daoProposals, peerReviews } = useApp();
+
+  if (!wallet) {
+    return (
+      <Paper sx={{ p: 4, textAlign: 'center' }}>
+        <Typography variant="h5">Welcome to SkillChain</Typography>
+        <Typography sx={{ mt: 2, mb: 3 }}>Please connect your wallet to view your dashboard.</Typography>
+      </Paper>
+    );
+  }
+
+  const recentNFTs = nftCertificates.slice(0, 2);
+  const recentSKL = sklHistory.slice(0, 3);
+  const activeProposals = daoProposals.filter(p => p.status === 'active').slice(0, 2);
+
+  return (
+    <Grid container spacing={3}>
+      {/* Stat Cards */}
+      <StatCard title="NFT Certificates" value={nftCertificates.length} icon={<School />} to="/certificates" />
+      <StatCard title="SKL Balance" value={sklBalance} icon={<Stars />} to="/tokens" />
+      <StatCard title="Active Votes" value={daoProposals.filter(p => p.status === 'active').length} icon={<HowToVote />} to="/voting" />
+      <StatCard title="Pending Reviews" value={peerReviews.pending.length} icon={<Group />} to="/review" />
+
+      {/* Recent NFTs */}
+      <Grid item xs={12} md={6}>
+        <Paper sx={{ p: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h6">Recent Certificates</Typography>
+            <Button component={RouterLink} to="/certificates" endIcon={<ArrowForward />}>View All</Button>
+          </Box>
+          <Grid container spacing={2}>
+            {recentNFTs.map(nft => (
+              <Grid item xs={12} sm={6} key={nft.id}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="subtitle2" noWrap>{nft.title}</Typography>
+                    <Typography variant="body2" color="text.secondary" noWrap>{nft.issuer}</Typography>
+                    <Typography variant="caption" color="text.secondary">{nft.issueDate}</Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </Paper>
+      </Grid>
+
+      {/* Recent SKL History */}
+      <Grid item xs={12} md={6}>
+        <Paper sx={{ p: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+            <Typography variant="h6">Recent SKL History</Typography>
+            <Button component={RouterLink} to="/tokens" endIcon={<ArrowForward />}>View All</Button>
+          </Box>
+          <List>
+            {recentSKL.map((item, index) => (
+              <React.Fragment key={item.id}>
+                <ListItem>
+                  <ListItemAvatar>
+                    <Avatar sx={{ bgcolor: item.type === 'earned' ? 'success.light' : 'error.light' }}>
+                      {item.type === 'earned' ? <TrendingUp /> : <TrendingDown />}
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={item.description}
+                    secondary={item.from ? `from: ${item.from}` : `to: ${item.to}`}
+                  />
+                  <Typography color={item.type === 'earned' ? 'success.main' : 'error.main'}>
+                    {item.amount > 0 ? '+' : ''}{item.amount} SKL
+                  </Typography>
+                </ListItem>
+                {index < recentSKL.length - 1 && <Divider variant="inset" component="li" />}
+              </React.Fragment>
+            ))}
+          </List>
+        </Paper>
+      </Grid>
+
+      {/* Active Proposals */}
+      {activeProposals.length > 0 && (
+        <Grid item xs={12}>
+          <Paper sx={{ p: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+              <Typography variant="h6">Active DAO Proposals</Typography>
+              <Button component={RouterLink} to="/voting" endIcon={<ArrowForward />}>View All</Button>
+            </Box>
+            <List>
+              {activeProposals.map(proposal => (
+                <ListItem key={proposal.id} secondaryAction={
+                  <Button variant="outlined" size="small" component={RouterLink} to="/voting">
+                    Vote
+                  </Button>
+                }>
+                  <ListItemText
+                    primary={proposal.title}
+                    secondary={`Ends: ${proposal.endDate} | Required: ${proposal.requiredSKL} SKL`}
+                  />
+                </ListItem>
+              ))}
+            </List>
+          </Paper>
+        </Grid>
+      )}
+    </Grid>
+  );
+}
+
+export default Dashboard;

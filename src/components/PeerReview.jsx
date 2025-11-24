@@ -1,212 +1,192 @@
-import { useState } from 'react'
-import { useApp } from '../context/AppContext'
+import React, { useState } from 'react';
+import { useApp } from '../context/AppContext';
+import {
+  Box, Paper, Typography, Tabs, Tab, Badge, Card, CardContent, CardActions, Button,
+  Dialog, DialogTitle, DialogContent, DialogActions, Rating, TextField, List, ListItem, ListItemText, Avatar, Divider
+} from '@mui/material';
+import { RateReview, CheckCircle, Inbox } from '@mui/icons-material';
 
-function PeerReview() {
-  const { peerReviews } = useApp()
-  const [activeTab, setActiveTab] = useState('pending')
-  const [selectedReview, setSelectedReview] = useState(null)
-
-  const tabs = [
-    { id: 'pending', label: 'レビュー依頼', count: peerReviews.pending.length },
-    { id: 'completed', label: '完了したレビュー', count: peerReviews.completed.length },
-    { id: 'received', label: '受け取ったレビュー', count: peerReviews.received.length }
-  ]
-
-  const handleStartReview = (review) => {
-    setSelectedReview(review)
-  }
-
+function CustomTabPanel(props) {
+  const { children, value, index, ...other } = props;
   return (
-    <div className="peer-review">
-      <h1 className="page-title">ピアレビュー</h1>
-
-      <div className="review-tabs">
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            className={`review-tab ${activeTab === tab.id ? 'active' : ''}`}
-            onClick={() => setActiveTab(tab.id)}
-          >
-            {tab.label}
-            {tab.count > 0 && <span className="tab-badge">{tab.count}</span>}
-          </button>
-        ))}
-      </div>
-
-      {/* レビュー依頼 */}
-      {activeTab === 'pending' && (
-        <div className="review-content">
-          {peerReviews.pending.length === 0 ? (
-            <div className="empty-state">
-              <p className="empty-icon">📭</p>
-              <p className="empty-text">現在レビュー依頼はありません</p>
-            </div>
-          ) : (
-            <div className="review-list">
-              {peerReviews.pending.map(review => (
-                <div key={review.id} className="review-card">
-                  <div className="review-header">
-                    <h3 className="review-project-title">{review.project}</h3>
-                    <span className="review-reward-badge">
-                      💎 {review.sklReward} SKL
-                    </span>
-                  </div>
-                  <div className="review-details">
-                    <p className="review-detail-item">
-                      <span className="detail-label">レビュー対象:</span>
-                      <span className="detail-value">{review.reviewee}</span>
-                    </p>
-                    <p className="review-detail-item">
-                      <span className="detail-label">期限:</span>
-                      <span className="detail-value">{review.deadline}</span>
-                    </p>
-                  </div>
-                  <button
-                    className="btn-primary"
-                    onClick={() => handleStartReview(review)}
-                  >
-                    レビューを開始
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* 完了したレビュー */}
-      {activeTab === 'completed' && (
-        <div className="review-content">
-          {peerReviews.completed.length === 0 ? (
-            <div className="empty-state">
-              <p className="empty-icon">📝</p>
-              <p className="empty-text">完了したレビューはまだありません</p>
-            </div>
-          ) : (
-            <div className="review-list">
-              {peerReviews.completed.map(review => (
-                <div key={review.id} className="review-card completed">
-                  <div className="review-header">
-                    <h3 className="review-project-title">{review.project}</h3>
-                    <span className="completion-badge">✓ 完了</span>
-                  </div>
-                  <div className="review-details">
-                    <p className="review-detail-item">
-                      <span className="detail-label">レビュー対象:</span>
-                      <span className="detail-value">{review.reviewee}</span>
-                    </p>
-                    <p className="review-detail-item">
-                      <span className="detail-label">完了日:</span>
-                      <span className="detail-value">{review.completedDate}</span>
-                    </p>
-                    <p className="review-detail-item">
-                      <span className="detail-label">評価:</span>
-                      <span className="detail-value">{'⭐'.repeat(Math.floor(review.rating))}</span>
-                    </p>
-                  </div>
-                  <div className="skl-earned-banner">
-                    💎 {review.sklEarned} SKL を獲得しました
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* 受け取ったレビュー */}
-      {activeTab === 'received' && (
-        <div className="review-content">
-          {peerReviews.received.length === 0 ? (
-            <div className="empty-state">
-              <p className="empty-icon">⭐</p>
-              <p className="empty-text">受け取ったレビューはまだありません</p>
-            </div>
-          ) : (
-            <div className="review-list">
-              {peerReviews.received.map(review => (
-                <div key={review.id} className="review-card received">
-                  <div className="review-header">
-                    <h3 className="review-project-title">{review.project}</h3>
-                    <div className="rating-display">
-                      {'⭐'.repeat(review.rating)}
-                    </div>
-                  </div>
-                  <div className="review-details">
-                    <p className="review-detail-item">
-                      <span className="detail-label">レビュアー:</span>
-                      <span className="detail-value">{review.reviewer}</span>
-                    </p>
-                    <p className="review-detail-item">
-                      <span className="detail-label">レビュー日:</span>
-                      <span className="detail-value">{review.date}</span>
-                    </p>
-                  </div>
-                  <div className="review-comment">
-                    <p className="comment-label">コメント:</p>
-                    <p className="comment-text">{review.comment}</p>
-                  </div>
-                  <div className="skl-earned-banner">
-                    💎 {review.sklEarned} SKL を獲得しました
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* レビュー開始モーダル */}
-      {selectedReview && (
-        <div className="modal-overlay" onClick={() => setSelectedReview(null)}>
-          <div className="modal-content review-modal" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setSelectedReview(null)}>✕</button>
-            <h2 className="modal-title">ピアレビュー実施</h2>
-            <div className="modal-body">
-              <div className="review-info">
-                <h3>{selectedReview.project}</h3>
-                <p>レビュー対象: {selectedReview.reviewee}</p>
-              </div>
-              <div className="review-form">
-                <div className="form-group">
-                  <label>コード品質（1-5）</label>
-                  <div className="rating-input">
-                    {[1, 2, 3, 4, 5].map(star => (
-                      <button key={star} className="star-button">⭐</button>
-                    ))}
-                  </div>
-                </div>
-                <div className="form-group">
-                  <label>技術力（1-5）</label>
-                  <div className="rating-input">
-                    {[1, 2, 3, 4, 5].map(star => (
-                      <button key={star} className="star-button">⭐</button>
-                    ))}
-                  </div>
-                </div>
-                <div className="form-group">
-                  <label>コメント</label>
-                  <textarea
-                    className="review-textarea"
-                    placeholder="詳細なフィードバックを記入してください..."
-                    rows="6"
-                  />
-                </div>
-              </div>
-              <div className="modal-actions">
-                <button className="btn-secondary" onClick={() => setSelectedReview(null)}>
-                  キャンセル
-                </button>
-                <button className="btn-primary">
-                  レビューを提出（{selectedReview.sklReward} SKL獲得）
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+    <div role="tabpanel" hidden={value !== index} {...other}>
+      {value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
     </div>
-  )
+  );
 }
 
-export default PeerReview
+function ReviewDialog({ open, handleClose, review }) {
+  const [rating, setRating] = useState(4);
+  const [comment, setComment] = useState('');
+
+  const handleSubmit = () => {
+    // Mock submission
+    console.log({ reviewId: review.id, rating, comment });
+    handleClose();
+  };
+
+  if (!review) return null;
+
+  return (
+    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
+      <DialogTitle>Submit Peer Review</DialogTitle>
+      <DialogContent>
+        <Typography variant="h6">{review.project}</Typography>
+        <Typography variant="body2" color="text.secondary" gutterBottom>
+          Reviewing: {review.reviewee}
+        </Typography>
+        <Box sx={{ my: 3 }}>
+          <Typography component="legend">Overall Rating</Typography>
+          <Rating
+            name="simple-controlled"
+            value={rating}
+            onChange={(event, newValue) => {
+              setRating(newValue);
+            }}
+          />
+        </Box>
+        <TextField
+          autoFocus
+          margin="dense"
+          id="comment"
+          label="Feedback Comment"
+          type="text"
+          fullWidth
+          variant="outlined"
+          multiline
+          rows={4}
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+        />
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleClose}>Cancel</Button>
+        <Button onClick={handleSubmit} variant="contained">
+          Submit Review ({review.sklReward} SKL)
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+function PeerReview() {
+  const { wallet, peerReviews } = useApp();
+  const [tabValue, setTabValue] = useState(0);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedReview, setSelectedReview] = useState(null);
+
+  if (!wallet) {
+    return (
+      <Paper sx={{ p: 4, textAlign: 'center' }}>
+        <Typography>Please connect your wallet to participate in peer reviews.</Typography>
+      </Paper>
+    );
+  }
+
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
+  };
+
+  const handleOpenDialog = (review) => {
+    setSelectedReview(review);
+    setDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+    setSelectedReview(null);
+  };
+
+  const tabs = [
+    { label: 'Pending', data: peerReviews.pending, icon: <Inbox /> },
+    { label: 'Completed', data: peerReviews.completed, icon: <CheckCircle /> },
+    { label: 'Received', data: peerReviews.received, icon: <RateReview /> },
+  ];
+
+  return (
+    <Box>
+      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+        <Tabs value={tabValue} onChange={handleTabChange} centered>
+          {tabs.map((tab, index) => (
+            <Tab
+              key={index}
+              label={
+                <Badge badgeContent={tab.data.length} color="primary">
+                  {tab.label}
+                </Badge>
+              }
+            />
+          ))}
+        </Tabs>
+      </Box>
+
+      <CustomTabPanel value={tabValue} index={0}>
+        {peerReviews.pending.map(review => (
+          <Card key={review.id} sx={{ mb: 2 }}>
+            <CardContent>
+              <Typography variant="h6">{review.project}</Typography>
+              <Typography variant="body2" color="text.secondary">Reviewee: {review.reviewee}</Typography>
+              <Typography variant="body2" color="text.secondary">Deadline: {review.deadline}</Typography>
+            </CardContent>
+            <CardActions sx={{ justifyContent: 'space-between' }}>
+              <Chip label={`Reward: ${review.sklReward} SKL`} color="success" />
+              <Button variant="contained" onClick={() => handleOpenDialog(review)}>Start Review</Button>
+            </CardActions>
+          </Card>
+        ))}
+      </CustomTabPanel>
+
+      <CustomTabPanel value={tabValue} index={1}>
+        <List component={Paper}>
+          {peerReviews.completed.map((review, index) => (
+            <React.Fragment key={review.id}>
+              <ListItem>
+                <ListItemText
+                  primary={review.project}
+                  secondary={`Reviewed: ${review.reviewee} on ${review.completedDate}`}
+                />
+                <Box textAlign="right">
+                  <Rating value={review.rating} readOnly />
+                  <Typography variant="body2" color="success.main">+{review.sklEarned} SKL</Typography>
+                </Box>
+              </ListItem>
+              {index < peerReviews.completed.length - 1 && <Divider />}
+            </React.Fragment>
+          ))}
+        </List>
+      </CustomTabPanel>
+
+      <CustomTabPanel value={tabValue} index={2}>
+        <List component={Paper}>
+          {peerReviews.received.map((review, index) => (
+             <React.Fragment key={review.id}>
+              <ListItem alignItems="flex-start">
+                <ListItemText
+                  primary={review.project}
+                  secondary={
+                    <>
+                      <Typography component="span" variant="body2" color="text.primary">
+                        "{review.comment}"
+                      </Typography>
+                      <br />
+                      - {review.reviewer} on {review.date}
+                    </>
+                  }
+                />
+                 <Box textAlign="right">
+                  <Rating value={review.rating} readOnly />
+                  <Typography variant="body2" color="success.main">+{review.sklEarned} SKL</Typography>
+                </Box>
+              </ListItem>
+              {index < peerReviews.received.length - 1 && <Divider />}
+            </React.Fragment>
+          ))}
+        </List>
+      </CustomTabPanel>
+
+      <ReviewDialog open={dialogOpen} handleClose={handleCloseDialog} review={selectedReview} />
+    </Box>
+  );
+}
+
+export default PeerReview;

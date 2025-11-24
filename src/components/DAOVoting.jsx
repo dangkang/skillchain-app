@@ -1,201 +1,165 @@
-import { useState } from 'react'
-import { useApp } from '../context/AppContext'
+import React, { useState } from 'react';
+import { useApp } from '../context/AppContext';
+import {
+  Box, Paper, Typography, Tabs, Tab, Card, CardContent, Button, LinearProgress, Chip,
+  Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Grid
+} from '@mui/material';
+import { CheckCircle, Cancel, HowToVote } from '@mui/icons-material';
 
-function DAOVoting() {
-  const { daoProposals, userProfile } = useApp()
-  const [filter, setFilter] = useState('active')
-  const [selectedProposal, setSelectedProposal] = useState(null)
+function ProposalCard({ proposal, onVoteClick }) {
+  const { sklBalance } = useApp();
+  const totalVotes = proposal.votes.for + proposal.votes.against;
+  const forPercentage = totalVotes > 0 ? (proposal.votes.for / totalVotes) * 100 : 0;
+  const canVote = sklBalance >= proposal.requiredSKL;
 
-  const filters = [
-    { id: 'active', label: '進行中' },
-    { id: 'closed', label: '終了' },
-    { id: 'all', label: 'すべて' }
-  ]
-
-  const filteredProposals = filter === 'all'
-    ? daoProposals
-    : daoProposals.filter(p => p.status === filter)
-
-  const getVotePercentage = (votes) => {
-    const total = votes.for + votes.against
-    if (total === 0) return { for: 0, against: 0 }
-    return {
-      for: Math.round((votes.for / total) * 100),
-      against: Math.round((votes.against / total) * 100)
+  const getStatusChip = () => {
+    if (proposal.status === 'closed') {
+      return <Chip label={proposal.result === 'approved' ? 'Approved' : 'Rejected'} color={proposal.result === 'approved' ? 'success' : 'error'} />;
     }
-  }
-
-  const handleVote = (proposal, voteFor) => {
-    if (userProfile.sklBalance < proposal.requiredSKL) {
-      alert(`投票には${proposal.requiredSKL} SKL以上の保有が必要です`)
-      return
+    if (proposal.userVoted) {
+      return <Chip label="Voted" color="info" variant="outlined" />;
     }
-    alert(`「${voteFor ? '賛成' : '反対'}」で投票しました`)
-    setSelectedProposal(null)
-  }
+    return <Chip label="Active" color="primary" />;
+  };
 
   return (
-    <div className="dao-voting">
-      <h1 className="page-title">DAO投票</h1>
+    <Card sx={{ mb: 3 }}>
+      <CardContent>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+          <Typography variant="h6">{proposal.title}</Typography>
+          {getStatusChip()}
+        </Box>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{proposal.description}</Typography>
+        
+        <Box sx={{ mb: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+            <Typography variant="body2" color="success.main">For: {proposal.votes.for} ({forPercentage.toFixed(1)}%)</Typography>
+            <Typography variant="body2" color="error.main">Against: {proposal.votes.against} ({(100 - forPercentage).toFixed(1)}%)</Typography>
+          </Box>
+          <LinearProgress variant="determinate" value={forPercentage} color="success" sx={{ height: 8, borderRadius: 4, '& .MuiLinearProgress-bar': { backgroundColor: 'success.main' }, bgcolor: 'error.light' }} />
+        </Box>
 
-      {/* 投票権情報 */}
-      <div className="voting-power-card">
-        <div className="voting-power-icon">🗳️</div>
-        <div className="voting-power-info">
-          <h3>あなたの投票権</h3>
-          <p className="voting-power-value">{userProfile.sklBalance} SKL保有</p>
-          <p className="voting-power-desc">
-            {userProfile.sklBalance >= 50
-              ? '✓ すべての提案に投票可能'
-              : `あと${50 - userProfile.sklBalance} SKLで投票権を獲得`}
-          </p>
-        </div>
-      </div>
+        <Grid container spacing={2} sx={{ color: 'text.secondary', mb: 2 }}>
+            <Grid item xs={12} sm={4}>
+                <Typography variant="caption">Proposer: {proposal.proposer}</Typography>
+            </Grid>
+            <Grid item xs={6} sm={4}>
+                <Typography variant="caption">Ends: {proposal.endDate}</Typography>
+            </Grid>
+            <Grid item xs={6} sm={4}>
+                <Typography variant="caption">Required: {proposal.requiredSKL} SKL</Typography>
+            </Grid>
+        </Grid>
 
-      {/* フィルター */}
-      <div className="filter-tabs">
-        {filters.map(f => (
-          <button
-            key={f.id}
-            className={`filter-tab ${filter === f.id ? 'active' : ''}`}
-            onClick={() => setFilter(f.id)}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
-
-      {/* 提案リスト */}
-      <div className="proposals-list-full">
-        {filteredProposals.length === 0 ? (
-          <div className="empty-state">
-            <p className="empty-icon">📋</p>
-            <p className="empty-text">提案がありません</p>
-          </div>
-        ) : (
-          filteredProposals.map(proposal => {
-            const percentage = getVotePercentage(proposal.votes)
-            return (
-              <div key={proposal.id} className="proposal-card-full">
-                <div className="proposal-status-badge">
-                  {proposal.status === 'active' && <span className="badge active">進行中</span>}
-                  {proposal.status === 'closed' && proposal.result === 'approved' && (
-                    <span className="badge approved">✓ 可決</span>
-                  )}
-                  {proposal.status === 'closed' && proposal.result === 'rejected' && (
-                    <span className="badge rejected">✕ 否決</span>
-                  )}
-                  {proposal.userVoted && <span className="badge voted">投票済み</span>}
-                </div>
-
-                <h3 className="proposal-title-large">{proposal.title}</h3>
-                <p className="proposal-description-full">{proposal.description}</p>
-
-                <div className="proposal-meta-grid">
-                  <div className="meta-item">
-                    <span className="meta-label">提案者</span>
-                    <span className="meta-value">{proposal.proposer}</span>
-                  </div>
-                  <div className="meta-item">
-                    <span className="meta-label">投票期限</span>
-                    <span className="meta-value">{proposal.endDate}</span>
-                  </div>
-                  <div className="meta-item">
-                    <span className="meta-label">必要SKL</span>
-                    <span className="meta-value">{proposal.requiredSKL} SKL</span>
-                  </div>
-                </div>
-
-                {/* 投票結果 */}
-                <div className="vote-results">
-                  <div className="vote-bar-container">
-                    <div className="vote-bar">
-                      <div
-                        className="vote-bar-for"
-                        style={{ width: `${percentage.for}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                  <div className="vote-counts">
-                    <div className="vote-count-item for">
-                      <span className="vote-label">賛成</span>
-                      <span className="vote-number">{proposal.votes.for} ({percentage.for}%)</span>
-                    </div>
-                    <div className="vote-count-item against">
-                      <span className="vote-label">反対</span>
-                      <span className="vote-number">{proposal.votes.against} ({percentage.against}%)</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 投票ボタン */}
-                {proposal.status === 'active' && !proposal.userVoted && (
-                  <div className="vote-actions">
-                    <button
-                      className="vote-button for"
-                      onClick={() => setSelectedProposal({ ...proposal, voteFor: true })}
-                      disabled={userProfile.sklBalance < proposal.requiredSKL}
-                    >
-                      賛成
-                    </button>
-                    <button
-                      className="vote-button against"
-                      onClick={() => setSelectedProposal({ ...proposal, voteFor: false })}
-                      disabled={userProfile.sklBalance < proposal.requiredSKL}
-                    >
-                      反対
-                    </button>
-                  </div>
-                )}
-
-                {proposal.userVoted && (
-                  <div className="voted-status">
-                    ✓ 投票済み（{proposal.votedFor ? '賛成' : '反対'}）
-                  </div>
-                )}
-              </div>
-            )
-          })
+        {proposal.status === 'active' && !proposal.userVoted && (
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 2 }}>
+            <Button variant="outlined" color="success" onClick={() => onVoteClick(proposal, true)} disabled={!canVote}>
+              Vote For
+            </Button>
+            <Button variant="outlined" color="error" onClick={() => onVoteClick(proposal, false)} disabled={!canVote}>
+              Vote Against
+            </Button>
+          </Box>
         )}
-      </div>
-
-      {/* 投票確認モーダル */}
-      {selectedProposal && (
-        <div className="modal-overlay" onClick={() => setSelectedProposal(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setSelectedProposal(null)}>✕</button>
-            <h2 className="modal-title">投票確認</h2>
-            <div className="modal-body">
-              <div className="vote-confirmation">
-                <h3>{selectedProposal.title}</h3>
-                <p className="vote-choice">
-                  {selectedProposal.voteFor ? '✓ 賛成' : '✕ 反対'}で投票します
-                </p>
-                <div className="vote-info">
-                  <p>この投票は取り消すことができません。</p>
-                  <p>投票にSKLは消費されません。</p>
-                </div>
-              </div>
-              <div className="modal-actions">
-                <button
-                  className="btn-secondary"
-                  onClick={() => setSelectedProposal(null)}
-                >
-                  キャンセル
-                </button>
-                <button
-                  className="btn-primary"
-                  onClick={() => handleVote(selectedProposal, selectedProposal.voteFor)}
-                >
-                  投票する
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  )
+         {!canVote && proposal.status === 'active' && !proposal.userVoted && (
+             <Typography variant="caption" color="error.main">You need at least {proposal.requiredSKL} SKL to vote.</Typography>
+         )}
+      </CardContent>
+    </Card>
+  );
 }
 
-export default DAOVoting
+function DAOVoting() {
+  const { wallet, sklBalance, daoProposals, setDaoProposals } = useApp();
+  const [tab, setTab] = useState('active');
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedVote, setSelectedVote] = useState(null);
+
+  const handleTabChange = (event, newValue) => {
+    setTab(newValue);
+  };
+
+  const handleVoteClick = (proposal, voteFor) => {
+    setSelectedVote({ proposal, voteFor });
+    setDialogOpen(true);
+  };
+
+  const handleConfirmVote = () => {
+    if (!selectedVote) return;
+    const { proposal, voteFor } = selectedVote;
+    
+    // NOTE: This is a mock update. In a real app, this would be a blockchain transaction.
+    setDaoProposals(proposals => proposals.map(p => {
+      if (p.id === proposal.id) {
+        return {
+          ...p,
+          userVoted: true,
+          votedFor: voteFor,
+          votes: {
+            ...p.votes,
+            [voteFor ? 'for' : 'against']: p.votes[voteFor ? 'for' : 'against'] + 1
+          }
+        };
+      }
+      return p;
+    }));
+
+    setDialogOpen(false);
+    setSelectedVote(null);
+  };
+
+  if (!wallet) {
+    return (
+      <Paper sx={{ p: 4, textAlign: 'center' }}>
+        <Typography>Please connect your wallet to participate in DAO voting.</Typography>
+      </Paper>
+    );
+  }
+
+  const filteredProposals = daoProposals.filter(p => tab === 'all' || p.status === tab);
+
+  return (
+    <Box>
+      <Paper sx={{ p: 2, mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
+        <HowToVote color="primary" sx={{ fontSize: 40 }} />
+        <Box>
+          <Typography variant="h6">Your Voting Power</Typography>
+          <Typography>{sklBalance} SKL</Typography>
+        </Box>
+      </Paper>
+
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs value={tab} onChange={handleTabChange} aria-label="proposals filter">
+          <Tab label="Active" value="active" />
+          <Tab label="Closed" value="closed" />
+          <Tab label="All" value="all" />
+        </Tabs>
+      </Box>
+
+      {filteredProposals.map(proposal => (
+        <ProposalCard key={proposal.id} proposal={proposal} onVoteClick={handleVoteClick} />
+      ))}
+
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
+        <DialogTitle>Confirm Your Vote</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            You are about to vote <strong>{selectedVote?.voteFor ? 'FOR' : 'AGAINST'}</strong> on the proposal:
+            <br />
+            <strong>"{selectedVote?.proposal.title}"</strong>
+            <br /><br />
+            This action is irreversible.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleConfirmVote} autoFocus variant="contained" color={selectedVote?.voteFor ? 'success' : 'error'}>
+            Confirm Vote
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
+}
+
+export default DAOVoting;

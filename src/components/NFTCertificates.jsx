@@ -1,119 +1,146 @@
-import { useState } from 'react'
-import { useApp } from '../context/AppContext'
+import React, { useState } from 'react';
+import { useApp } from '../context/AppContext';
+import { Grid, Card, CardContent, CardMedia, Typography, Box, Paper, ToggleButton, ToggleButtonGroup, Chip, Modal, Fade, Backdrop } from '@mui/material';
+
+const style = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: '90%',
+  maxWidth: 800,
+  bgcolor: 'background.paper',
+  boxShadow: 24,
+  p: 4,
+  display: 'flex',
+  flexDirection: { xs: 'column', md: 'row' },
+  gap: 3,
+};
+
+const types = [
+  { id: 'all', label: 'All' },
+  { id: 'certification', label: 'Certification' },
+  { id: 'training', label: 'Training' },
+  { id: 'contribution', label: 'Contribution' }
+];
+
+const typeColors = {
+  certification: 'primary',
+  training: 'secondary',
+  contribution: 'success',
+};
 
 function NFTCertificates() {
-  const { nftCertificates } = useApp()
-  const [selectedType, setSelectedType] = useState('all')
-  const [selectedNFT, setSelectedNFT] = useState(null)
+  const { wallet, nftCertificates } = useApp();
+  const [selectedType, setSelectedType] = useState('all');
+  const [selectedNFT, setSelectedNFT] = useState(null);
 
-  const types = [
-    { id: 'all', label: 'すべて' },
-    { id: 'certification', label: '資格認定' },
-    { id: 'training', label: '研修修了' },
-    { id: 'contribution', label: 'プロジェクト貢献' }
-  ]
+  const handleOpen = (nft) => setSelectedNFT(nft);
+  const handleClose = () => setSelectedNFT(null);
+
+  const handleTypeChange = (event, newType) => {
+    if (newType !== null) {
+      setSelectedType(newType);
+    }
+  };
 
   const filteredNFTs = selectedType === 'all'
     ? nftCertificates
-    : nftCertificates.filter(nft => nft.type === selectedType)
+    : nftCertificates.filter(nft => nft.type === selectedType);
 
-  const getTypeLabel = (type) => {
-    const typeMap = {
-      certification: '資格認定',
-      training: '研修修了',
-      contribution: 'プロジェクト貢献'
-    }
-    return typeMap[type] || type
+  if (!wallet) {
+    return (
+      <Paper sx={{ p: 4, textAlign: 'center' }}>
+        <Typography>Please connect your wallet to view your NFT certificates.</Typography>
+      </Paper>
+    );
   }
 
   return (
-    <div className="nft-certificates">
-      <h1 className="page-title">NFT証明書</h1>
+    <Box>
+      <Paper sx={{ p: 2, mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <ToggleButtonGroup
+          value={selectedType}
+          exclusive
+          onChange={handleTypeChange}
+          aria-label="nft type filter"
+        >
+          {types.map(type => (
+            <ToggleButton key={type.id} value={type.id} aria-label={type.label}>
+              {type.label}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+        <Typography variant="subtitle1">{filteredNFTs.length} Certificates</Typography>
+      </Paper>
 
-      <div className="filter-tabs">
-        {types.map(type => (
-          <button
-            key={type.id}
-            className={`filter-tab ${selectedType === type.id ? 'active' : ''}`}
-            onClick={() => setSelectedType(type.id)}
-          >
-            {type.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="nft-count">
-        {filteredNFTs.length}件の証明書
-      </div>
-
-      <div className="nft-grid-large">
+      <Grid container spacing={3}>
         {filteredNFTs.map(nft => (
-          <div
-            key={nft.id}
-            className="nft-card"
-            onClick={() => setSelectedNFT(nft)}
-          >
-            <div className="nft-image-container">
-              <img src={nft.image} alt={nft.title} className="nft-image" />
-              <span className="nft-type-badge">{getTypeLabel(nft.type)}</span>
-            </div>
-            <div className="nft-card-body">
-              <h3 className="nft-title">{nft.title}</h3>
-              <p className="nft-issuer">発行者: {nft.issuer}</p>
-              <p className="nft-date">発行日: {nft.issueDate}</p>
-              <p className="nft-token-id">Token ID: {nft.tokenId}</p>
-              {nft.sklEarned && (
-                <div className="nft-skl-earned">
-                  <span className="skl-icon">💎</span>
-                  <span>+{nft.sklEarned} SKL獲得</span>
-                </div>
-              )}
-            </div>
-          </div>
+          <Grid item key={nft.id} xs={12} sm={6} md={4} lg={3}>
+            <Card onClick={() => handleOpen(nft)} sx={{ cursor: 'pointer', height: '100%' }}>
+              <CardMedia
+                component="img"
+                height="140"
+                image={nft.image}
+                alt={nft.title}
+              />
+              <CardContent>
+                <Chip label={nft.type} color={typeColors[nft.type] || 'default'} size="small" sx={{ mb: 1 }} />
+                <Typography gutterBottom variant="h6" component="div" noWrap>
+                  {nft.title}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  by {nft.issuer}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Issued: {nft.issueDate}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
         ))}
-      </div>
+      </Grid>
 
-      {/* NFT詳細モーダル */}
-      {selectedNFT && (
-        <div className="modal-overlay" onClick={() => setSelectedNFT(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setSelectedNFT(null)}>✕</button>
-            <div className="modal-body">
-              <img src={selectedNFT.image} alt={selectedNFT.title} className="modal-nft-image" />
-              <div className="modal-nft-details">
-                <span className="modal-type-badge">{getTypeLabel(selectedNFT.type)}</span>
-                <h2 className="modal-title">{selectedNFT.title}</h2>
-                <div className="modal-info-grid">
-                  <div className="modal-info-item">
-                    <span className="info-label">発行者</span>
-                    <span className="info-value">{selectedNFT.issuer}</span>
-                  </div>
-                  <div className="modal-info-item">
-                    <span className="info-label">発行日</span>
-                    <span className="info-value">{selectedNFT.issueDate}</span>
-                  </div>
-                  <div className="modal-info-item">
-                    <span className="info-label">Token ID</span>
-                    <span className="info-value">{selectedNFT.tokenId}</span>
-                  </div>
-                  {selectedNFT.sklEarned && (
-                    <div className="modal-info-item">
-                      <span className="info-label">獲得SKL</span>
-                      <span className="info-value highlight">+{selectedNFT.sklEarned} SKL</span>
-                    </div>
-                  )}
-                </div>
-                <div className="modal-actions">
-                  <button className="btn-primary">ポートフォリオに追加</button>
-                  <button className="btn-secondary">シェア</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  )
+      <Modal
+        aria-labelledby="transition-modal-title"
+        aria-describedby="transition-modal-description"
+        open={!!selectedNFT}
+        onClose={handleClose}
+        closeAfterTransition
+        BackdropComponent={Backdrop}
+        BackdropProps={{
+          timeout: 500,
+        }}
+      >
+        <Fade in={!!selectedNFT}>
+          <Box sx={style}>
+            <CardMedia
+              component="img"
+              sx={{ width: { xs: '100%', md: 300 }, objectFit: 'cover' }}
+              image={selectedNFT?.image}
+              alt={selectedNFT?.title}
+            />
+            <Box>
+              <Chip label={selectedNFT?.type} color={typeColors[selectedNFT?.type] || 'default'} size="small" sx={{ mb: 1 }} />
+              <Typography id="transition-modal-title" variant="h4" component="h2">
+                {selectedNFT?.title}
+              </Typography>
+              <Typography id="transition-modal-description" sx={{ mt: 2 }}>
+                <strong>Issuer:</strong> {selectedNFT?.issuer}<br />
+                <strong>Issue Date:</strong> {selectedNFT?.issueDate}<br />
+                <strong>Token ID:</strong> {selectedNFT?.tokenId}
+              </Typography>
+              {selectedNFT?.sklEarned && (
+                <Typography variant="h6" color="primary.main" sx={{ mt: 2 }}>
+                  + {selectedNFT.sklEarned} SKL Earned
+                </Typography>
+              )}
+            </Box>
+          </Box>
+        </Fade>
+      </Modal>
+    </Box>
+  );
 }
 
-export default NFTCertificates
+export default NFTCertificates;

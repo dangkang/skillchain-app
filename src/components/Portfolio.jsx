@@ -1,162 +1,126 @@
-import { useApp } from '../context/AppContext'
+import React, { useState } from 'react';
+import { useApp } from '../context/AppContext';
+import {
+  Box, Paper, Typography, Grid, Avatar, Chip, Button, Tabs, Tab, List, ListItem, ListItemAvatar, ListItemText, Divider, ImageList, ImageListItem, ImageListItemBar
+} from '@mui/material';
+import { School, Code, Group, Share, PictureAsPdf, Link as LinkIcon } from '@mui/icons-material';
+
+function CustomTabPanel(props) {
+  const { children, value, index, ...other } = props;
+  return (
+    <div role="tabpanel" hidden={value !== index} {...other}>
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+    </div>
+  );
+}
 
 function Portfolio() {
-  const { nftCertificates, userProfile, sklHistory } = useApp()
+  const { wallet, userProfile, nftCertificates, sklHistory } = useApp();
+  const [tabValue, setTabValue] = useState(0);
 
-  const certifications = nftCertificates.filter(nft => nft.type === 'certification')
-  const trainings = nftCertificates.filter(nft => nft.type === 'training')
-  const contributions = nftCertificates.filter(nft => nft.type === 'contribution')
+  if (!wallet) {
+    return (
+      <Paper sx={{ p: 4, textAlign: 'center' }}>
+        <Typography>Please connect your wallet to view your portfolio.</Typography>
+      </Paper>
+    );
+  }
+
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
+  };
 
   const totalSKLEarned = sklHistory
     .filter(item => item.type === 'earned')
-    .reduce((sum, item) => sum + item.amount, 0)
+    .reduce((sum, item) => sum + item.amount, 0);
+  
+  const certifications = nftCertificates.filter(nft => nft.type === 'certification');
+  const trainings = nftCertificates.filter(nft => nft.type === 'training');
+  const contributions = nftCertificates.filter(nft => nft.type === 'contribution');
+
+  const skillSections = [
+    { label: "Certifications", icon: <School />, data: certifications },
+    { label: "Training", icon: <Code />, data: trainings },
+    { label: "Contributions", icon: <Group />, data: contributions },
+  ];
 
   return (
-    <div className="portfolio">
-      <h1 className="page-title">ポートフォリオ</h1>
+    <Paper>
+      {/* Header */}
+      <Box sx={{ p: 4 }}>
+        <Grid container spacing={3} alignItems="center">
+          <Grid item>
+            <Avatar sx={{ width: 80, height: 80, bgcolor: 'primary.main', fontSize: '2.5rem' }}>
+              {userProfile.name.charAt(0)}
+            </Avatar>
+          </Grid>
+          <Grid item xs>
+            <Typography variant="h4">{userProfile.name}</Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ wordBreak: 'break-all' }}>{userProfile.did}</Typography>
+            <Chip label={`Member Since ${userProfile.memberSince}`} size="small" sx={{ mt: 1 }} />
+          </Grid>
+          <Grid item>
+            <Box textAlign="center" sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1, minWidth: 120 }}>
+              <Typography variant="h5">{nftCertificates.length}</Typography>
+              <Typography variant="body2" color="text.secondary">NFTs</Typography>
+            </Box>
+          </Grid>
+          <Grid item>
+            <Box textAlign="center" sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1, minWidth: 120 }}>
+              <Typography variant="h5">{totalSKLEarned}</Typography>
+              <Typography variant="body2" color="text.secondary">SKL Earned</Typography>
+            </Box>
+          </Grid>
+        </Grid>
+      </Box>
+      <Divider />
 
-      {/* プロフィールサマリー */}
-      <div className="portfolio-header">
-        <div className="profile-avatar">
-          <div className="avatar-circle">{userProfile.name.charAt(0)}</div>
-        </div>
-        <div className="profile-info">
-          <h2 className="profile-name">{userProfile.name}</h2>
-          <p className="profile-did">{userProfile.did}</p>
-          <p className="profile-member-since">メンバー登録: {userProfile.memberSince}</p>
-        </div>
-        <div className="profile-stats">
-          <div className="stat-box">
-            <div className="stat-value">{nftCertificates.length}</div>
-            <div className="stat-label">NFT証明書</div>
-          </div>
-          <div className="stat-box">
-            <div className="stat-value">{totalSKLEarned}</div>
-            <div className="stat-label">累計SKL獲得</div>
-          </div>
-        </div>
-      </div>
-
-      {/* スキル概要 */}
-      <section className="portfolio-section">
-        <h2 className="section-title">スキル概要</h2>
-        <div className="skill-summary">
-          <div className="skill-category">
-            <h3 className="skill-category-title">
-              <span className="category-icon">🎓</span>
-              資格認定 ({certifications.length})
-            </h3>
-            <div className="skill-items">
-              {certifications.map(cert => (
-                <div key={cert.id} className="skill-item">
-                  <img src={cert.image} alt={cert.title} className="skill-icon" />
-                  <div className="skill-info">
-                    <p className="skill-name">{cert.title}</p>
-                    <p className="skill-issuer">{cert.issuer}</p>
-                    <p className="skill-date">{cert.issueDate}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="skill-category">
-            <h3 className="skill-category-title">
-              <span className="category-icon">📚</span>
-              研修修了 ({trainings.length})
-            </h3>
-            <div className="skill-items">
-              {trainings.map(training => (
-                <div key={training.id} className="skill-item">
-                  <img src={training.image} alt={training.title} className="skill-icon" />
-                  <div className="skill-info">
-                    <p className="skill-name">{training.title}</p>
-                    <p className="skill-issuer">{training.issuer}</p>
-                    <p className="skill-date">{training.issueDate}</p>
-                    {training.sklEarned && (
-                      <span className="skl-earned-small">+{training.sklEarned} SKL</span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="skill-category">
-            <h3 className="skill-category-title">
-              <span className="category-icon">💻</span>
-              プロジェクト貢献 ({contributions.length})
-            </h3>
-            <div className="skill-items">
-              {contributions.map(contrib => (
-                <div key={contrib.id} className="skill-item">
-                  <img src={contrib.image} alt={contrib.title} className="skill-icon" />
-                  <div className="skill-info">
-                    <p className="skill-name">{contrib.title}</p>
-                    <p className="skill-issuer">{contrib.issuer}</p>
-                    <p className="skill-date">{contrib.issueDate}</p>
-                    {contrib.sklEarned && (
-                      <span className="skl-earned-small">+{contrib.sklEarned} SKL</span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* NFTギャラリー */}
-      <section className="portfolio-section">
-        <h2 className="section-title">NFTギャラリー</h2>
-        <div className="nft-gallery">
-          {nftCertificates.map(nft => (
-            <div key={nft.id} className="gallery-item">
-              <img src={nft.image} alt={nft.title} className="gallery-image" />
-              <div className="gallery-overlay">
-                <p className="gallery-title">{nft.title}</p>
-                <p className="gallery-date">{nft.issueDate}</p>
-              </div>
-            </div>
+      {/* Skills Section */}
+      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+        <Tabs value={tabValue} onChange={handleTabChange} centered>
+          {skillSections.map((section, index) => (
+            <Tab key={index} label={section.label} icon={section.icon} iconPosition="start" />
           ))}
-        </div>
-      </section>
+        </Tabs>
+      </Box>
+      {skillSections.map((section, index) => (
+        <CustomTabPanel key={index} value={tabValue} index={index}>
+          <List>
+            {section.data.map(item => (
+              <ListItem key={item.id}>
+                <ListItemAvatar>
+                  <Avatar variant="rounded" src={item.image} />
+                </ListItemAvatar>
+                <ListItemText primary={item.title} secondary={`by ${item.issuer} on ${item.issueDate}`} />
+              </ListItem>
+            ))}
+          </List>
+        </CustomTabPanel>
+      ))}
+      <Divider />
 
-      {/* ブロックチェーン検証情報 */}
-      <section className="portfolio-section">
-        <h2 className="section-title">ブロックチェーン検証</h2>
-        <div className="blockchain-info">
-          <div className="blockchain-item">
-            <span className="blockchain-label">ウォレットアドレス</span>
-            <span className="blockchain-value">{userProfile.did}</span>
-          </div>
-          <div className="blockchain-item">
-            <span className="blockchain-label">NFT総数</span>
-            <span className="blockchain-value">{nftCertificates.length}件</span>
-          </div>
-          <div className="blockchain-item">
-            <span className="blockchain-label">最終更新</span>
-            <span className="blockchain-value">
-              {nftCertificates[0]?.issueDate || '-'}
-            </span>
-          </div>
-          <button className="verify-button">
-            🔗 ブロックチェーンで検証
-          </button>
-        </div>
-      </section>
+      {/* NFT Gallery */}
+      <Box sx={{ p: 2 }}>
+        <Typography variant="h6" sx={{ p: 1 }}>NFT Gallery</Typography>
+        <ImageList variant="quilted" cols={4} rowHeight={164}>
+          {nftCertificates.map((item) => (
+            <ImageListItem key={item.id}>
+              <img src={`${item.image}&w=164&h=164&fit=crop&auto=format`} alt={item.title} loading="lazy" />
+              <ImageListItemBar title={item.title} subtitle={item.issuer} />
+            </ImageListItem>
+          ))}
+        </ImageList>
+      </Box>
+      <Divider />
 
-      {/* 共有ボタン */}
-      <div className="portfolio-actions">
-        <button className="btn-primary-large">
-          📤 ポートフォリオを共有
-        </button>
-        <button className="btn-secondary-large">
-          📄 PDFでエクスポート
-        </button>
-      </div>
-    </div>
-  )
+      {/* Actions */}
+      <Box sx={{ p: 2, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+        <Button variant="outlined" startIcon={<LinkIcon />}>Verify on Blockchain</Button>
+        <Button variant="outlined" startIcon={<Share />}>Share Portfolio</Button>
+        <Button variant="contained" startIcon={<PictureAsPdf />}>Export as PDF</Button>
+      </Box>
+    </Paper>
+  );
 }
 
-export default Portfolio
+export default Portfolio;
