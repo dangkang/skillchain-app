@@ -6,6 +6,7 @@ import SkillToken from './components/SkillToken'
 import PeerReview from './components/PeerReview'
 import DAOVoting from './components/DAOVoting'
 import Portfolio from './components/Portfolio'
+import ServiceValue from './components/ServiceValue' // この行を追加
 
 function AppContent() {
   const { currentView } = useApp()
@@ -20,6 +21,7 @@ function AppContent() {
         {currentView === 'review' && <PeerReview />}
         {currentView === 'dao' && <DAOVoting />}
         {currentView === 'portfolio' && <Portfolio />}
+        {currentView === 'service-value' && <ServiceValue />} {/* この行を追加 */}
       </main>
     </div>
   )

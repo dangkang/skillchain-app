@@ -9,7 +9,8 @@ function Header() {
     { id: 'skl', label: 'SKLトークン', icon: '💎' },
     { id: 'review', label: 'ピアレビュー', icon: '👥' },
     { id: 'dao', label: 'DAO投票', icon: '🗳️' },
-    { id: 'portfolio', label: 'ポートフォリオ', icon: '📊' }
+    { id: 'portfolio', label: 'ポートフォリオ', icon: '📊' },
+    { id: 'service-value', label: 'サービス価値', icon: '⚖️' } // この行を追加
   ]
 
   return (
@@ -20,16 +21,12 @@ function Header() {
             <span className="logo-icon">⛓️</span>
             <span className="logo-text">SkillChain</span>
           </div>
-
-          <div className="user-info">
-            <div className="skl-balance">
-              <span className="balance-icon">💎</span>
-              <span className="balance-amount">{userProfile.sklBalance} SKL</span>
-            </div>
-            <div className="user-profile">
-              <span className="user-name">{userProfile.name}</span>
-              <span className="user-did">{userProfile.did}</span>
-            </div>
+          <div className="user-profile">
+            <span className="user-skl">
+              {userProfile.sklBalance.toLocaleString()} SKL
+            </span>
+            <span className="user-name">{userProfile.name}</span>
+            <div className="user-avatar"></div>
           </div>
         </div>
 
